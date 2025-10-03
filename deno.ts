@@ -1,9 +1,9 @@
 import { serve } from "https://deno.land/std/http/server.ts";
 
-const UUID: string = Deno.env.get("UUID") || "b70a3a2f-5eae-4311-ad37-29a30536e59b";
+const UUID: string = Deno.env.get("UUID" ) || "b70a3a2f-5eae-4311-ad37-29a30536e59b";
 const SUB_PATH: string = Deno.env.get("SUB_PATH") || "sub";  //获取订阅路径
 const XPATH: string = Deno.env.get("XPATH") || "xhttp";      // 节点路径
-const DOMAIN: string = Deno.env.get("DOMAIN") || "";         // deno分配的域名必填，不带https://前缀，例如：xxxx.deno.dev      
+const DOMAIN: string = Deno.env.get("DOMAIN" ) || "";         // deno分配的域名必填，不带https://前缀 ，例如：xxxx.deno.dev      
 const NAME: string = Deno.env.get("NAME") || "Deno";         // 名称
 const PORT: number = parseInt(Deno.env.get("PORT") || "8000"); // Deno Deploy 默认端口为 8000
 
@@ -348,7 +348,7 @@ class Session {
   }
 }
 
-let ISP = "unknown"; // 默认值
+let ISP = "unknown"; // 默认值，移除外部请求
 let IP = DOMAIN || "localhost"; // 优先使用 DOMAIN 环境变量，否则为 localhost
 
 function generatePadding(min: number, max: number): string {
@@ -370,6 +370,7 @@ serve(
     };
 
     if (path === "/") { 
+      console.log("Health check received on /"); // 添加日志
       return new Response("Hello, World\n", 
       { status: 200, 
         headers: { "Content-Type": "text/plain" }, }); 
@@ -377,7 +378,7 @@ serve(
 
     if (path === `/${SUB_PATH}`) {
       const vlessURL = `vless://${UUID}@${IP}:443?encryption=none&security=tls&sni=${IP}&fp=chrome&allowInsecure=1&type=xhttp&host=${IP}&path=${SETTINGS.XPATH}&mode=packet-up#${NAME}-${ISP}`;
-      const base64Content = btoa(vlessURL);
+      const base64Content = btoa(vlessURL );
       return new Response(base64Content + "\n", {
         status: 200,
         headers: { "Content-Type": "text/plain" },
@@ -446,6 +447,3 @@ serve(
     console.log(`Server is running on port ${PORT}`);
   } }
 );
-
-
-
