@@ -5,7 +5,7 @@ const SUB_PATH: string = Deno.env.get("SUB_PATH") || "sub";  //获取订阅路�
 const XPATH: string = Deno.env.get("XPATH") || "xhttp";      // 节点路径
 const DOMAIN: string = Deno.env.get("DOMAIN") || "";         // deno分配的域名必填，不带https://前缀，例如：xxxx.deno.dev      
 const NAME: string = Deno.env.get("NAME") || "Deno";         // 名称
-const PORT: number = parseInt(Deno.env.get("PORT") || "8000"); 
+const PORT: number = parseInt(Deno.env.get("PORT") || "8000"); // Deno Deploy 默认端口为 8000
 
 const SETTINGS: Settings = {
   UUID,
@@ -142,8 +142,6 @@ async function parse_header(
     return vless;
   } catch (err) {
     throw new Error(`read vless header error: ${err.message}`);
-  } finally {
-    reader.releaseLock();
   }
 }
 
@@ -350,44 +348,8 @@ class Session {
   }
 }
 
-let ISP = "";
-
-try {
-  const response = await fetch("https://speed.cloudflare.com/meta");
-  if (!response.ok) {
-    throw new Error(`HTTP error! status: ${response.status}`);
-  }
-  const data = await response.json() as {
-    country: string; 
-    asOrganization: string;
-  };
-  ISP = `${data.country}-${data.asOrganization}`.replace(/ /g, "_");
-} catch (err) {
-  ISP = "unknown";
-}
-
-let IP = DOMAIN;
-if (!DOMAIN) {
-  try {
-    const p = Deno.run({
-      cmd: ["curl", "-s", "--max-time", "2", "ipv4.ip.sb"],
-      stdout: "piped",
-    });
-    const output = await p.output();
-    IP = new TextDecoder().decode(output).trim();
-  } catch (err) {
-    try {
-      const p = Deno.run({
-        cmd: ["curl", "-s", "--max-time", "1", "ipv6.ip.sb"],
-        stdout: "piped",
-      });
-      const output = await p.output();
-      IP = `[${new TextDecoder().decode(output).trim()}]`;
-    } catch (ipv6Err) {
-      IP = "localhost";
-    }
-  }
-}
+let ISP = "unknown"; // 默认值
+let IP = DOMAIN || "localhost"; // 优先使用 DOMAIN 环境变量，否则为 localhost
 
 function generatePadding(min: number, max: number): string {
   const length = min + Math.floor(Math.random() * (max - min));
@@ -484,5 +446,6 @@ serve(
     console.log(`Server is running on port ${PORT}`);
   } }
 );
+
 
 
